@@ -1,0 +1,508 @@
+/*
+Cerinte comune tuturor temelor:
+
+toate clase vor conține obligatoriu constructori de inițializare, parametrizati și de copiere, destructor, iar operatorii >>,<<,= să fie supraincarcati.
+ilustrarea conceptelor de moștenire și functii virtuale (pure – unde se considera mai natural)
+citirea informațiilor complete a n obiecte, memorarea și afisarea acestora
+
+
+Tema 3. Cozi de caractere (implementate dinamic):
+
+Se dau urmatoarele clase:
+	- Nod (char info, nod*next)
+    - Coada (nod * prim, nod * ultim, int dim_max);
+	- DEQUE:Coada - cu operatiile de adaugare și stergere modificate corespunzator.
+	- DEQUE_MARCAJ:Coada - cu operatiile de adaugare și stergere modificate corespunzator.
+
+Clasele derivate trebuie sa contina cel puțin constructori parametrizati prin
+care sa se evidentieze transmiterea parametrilor catre constructorul din clasa
+de baza si destructor.
+*/
+#include <iostream>
+#include <cstring>
+using namespace std;
+
+class nod
+{
+protected:
+    char info;
+    nod *next;
+    bool ok;
+public:
+    nod();//constructor de initializare
+    nod(char n); // constructor de initializare cu parametrou
+    ~nod(); // destructor
+    nod(const nod &c)
+    {
+        ok=false;
+    } //constructorul de copiere
+    void operator =(nod &r); //supraincarcarea operatorului =
+    friend istream& operator >>(istream& in, nod& x);//supraincarcarea operatorului >>
+    friend ostream& operator<<(ostream& out, nod& y);//supraincarcarea operatorului <<
+    nod *get_next();
+    void set_next(nod*a);
+    char get_info();
+
+};
+nod* nod::get_next()
+{
+    return this->next;
+}
+void nod::set_next(nod*a)
+{
+    this->next=a;
+}
+char nod::get_info()
+{
+    return this->info;
+}
+nod::nod()
+{
+    info=0;
+    this->next=NULL;
+    ok=true;
+}
+nod::nod(char n)
+{
+    info=n;
+    this->next=NULL;
+    ok=true;
+}
+nod::~nod()
+{
+    if (ok==true)
+        delete next;
+}
+void nod:: operator =(nod &r)
+{
+    this->info=r.info;
+
+}
+istream& operator >>(istream& in, nod& x)
+{
+    in >> x.info;
+    return in;
+}
+ostream& operator<<(ostream& out, nod& y)
+{
+    out << y.info;
+    return out;
+}
+
+class Coada:public nod
+{
+protected:
+    nod *prim;
+    nod *ultim;
+    int dim_max;
+    int nr_elem;
+    bool ok;
+public:
+    Coada(); //constructor de initializare
+    Coada(char *x); //constructor de initializare cu parametru
+    ~Coada();//destructorul
+    Coada(const Coada &c)
+    {
+        ok=false;
+    }//constructorul de copiere
+    void operator =(Coada &r); //supraincarcarea operatorului =
+    friend istream& operator >>(istream& in, Coada& x);//supraincarcarea operatorului >>
+    friend ostream& operator<<(ostream& out, Coada& y);//supraincarcarea operatorului <<
+    void set_nr_elem(int a)
+    {
+        nr_elem=a;
+    }
+    void set_dim_max(int a)
+    {
+        dim_max=a;
+    }
+    int get_dim_max()
+    {
+        return dim_max;
+    }
+    void adaugare_sfarsit(char c);
+    void stergere_inceput();
+    virtual void adaugare_inceput(char c){};
+    virtual void stergere_sfarsit(){};
+
+
+};
+Coada::Coada()
+{
+    this->prim=NULL;
+    this->ultim=NULL;
+    nr_elem=0;
+    ok=true;
+}
+Coada::Coada(char *x)
+{
+    cout<<"dim_max: ";
+    cin>>dim_max;
+    int lungime=strlen(x);
+    if(dim_max>lungime)
+        nr_elem=lungime;
+    else
+     nr_elem=dim_max;
+    nod *n=new nod(x[0]);
+    prim=n;
+    ultim=n;
+    for(int i=1; i<lungime && i<dim_max; i++)
+    {
+        n=new nod(x[i]);
+        ultim->set_next(n);
+        ultim=n;
+    }
+    if(lungime>dim_max)
+     cout<<"Nu mai pot fi introduse caractere in coada: ";
+    for(int i=dim_max; i<lungime; i++)
+    {
+        cout<<x[i];
+    }
+    ok=true;
+}
+Coada::~Coada()
+{
+    if(ok==true)
+    {
+        delete prim;
+        delete ultim;
+    }
+}
+void Coada:: operator =(Coada &r)
+{
+
+    prim=NULL;
+    ultim=NULL;
+    dim_max=r.dim_max;
+    nr_elem=r.nr_elem;
+    nod* a;
+    nod* b;
+    b=r.prim;
+    a=new nod(b->get_info());
+    prim=a;
+    ultim=a;
+    b=b->get_next();
+    while(b!=r.ultim)
+    {
+        a=new nod(b->get_info());
+        ultim->set_next(a);
+        ultim=a;
+        b=b->get_next();
+    }
+    a=new nod(b->get_info());
+    ultim->set_next(a);
+    ultim=a;
+
+}
+istream& operator >>(istream& in, Coada& x)
+{
+    cout<<"dim_max:";
+    in >> x.dim_max;
+    cout<<"nr_elem:";
+    in >> x.nr_elem;
+    char c;
+    nod *n;
+    for(int i=0; i<x.nr_elem && i<x.dim_max; i++)
+    {
+        in >> c;
+        n=new nod(c);
+        if(i==0)
+        {
+            x.prim=n;
+            x.ultim=n;
+        }
+        else
+        {
+            x.ultim->set_next(n);
+            x.ultim=n;
+        }
+
+    }
+    if(x.nr_elem>x.dim_max)
+    {
+        cout<<"\n Nu mai e loc in coada: ";
+        x.nr_elem=x.dim_max;
+    }
+    return in;
+}
+ostream& operator<<(ostream& out, Coada& y)
+{
+    nod* n;
+    n=y.prim;
+    out<<endl;
+    while (n!=y.ultim);
+    {
+        out << n->get_info();
+        n=n->get_next();
+    }
+    out<<n->get_info();
+    return out;
+}
+
+void Coada::adaugare_sfarsit(char c)
+{
+    if(nr_elem>=dim_max)
+        cout<<"Coada e plina si nu se mai poate insera nici un nod"<<endl;
+    else
+    {
+        nod *n=new nod(c);
+        if(ultim!=NULL)
+            ultim->set_next(n);
+        ultim=n;
+        nr_elem++;
+    }
+
+}
+void Coada::stergere_inceput()
+{
+    if(prim!=NULL)
+        {
+          nod *n;
+          n=prim;
+          prim=prim->get_next();
+          delete n;
+          nr_elem--;
+
+        }
+}
+class DEQUE: public Coada //Clasa derivata din clasa Coada
+{
+    bool ok;
+public:
+    DEQUE():Coada()
+    {
+        ok=true;
+    }//constructor de initializare
+    DEQUE(char*x):Coada(x)
+    {
+        ok=true;
+    }//constructor de initializare cu parametru
+    ~DEQUE()
+    {
+        if(ok==true)
+            delete this;
+    }//destructorul
+    DEQUE(const DEQUE &x):Coada(x)
+    {
+        ok=false;
+    }//constructorul de copiere
+    friend istream& operator>>(istream&, DEQUE&x);
+    friend ostream& operator<<(ostream&, DEQUE&y);
+    void operator=(const DEQUE& x);
+    void adaugare_inceput(char c);
+    void stergere_sfarsit();
+
+};
+istream& operator>>(istream& in, DEQUE& x)
+{
+    int dim;
+    char c;
+    cout<<"dim_max: ";
+    in >> x.dim_max;
+    cout<<"dim coada: ";
+    in>>dim;
+    for(int i=0; i<dim && i<x.dim_max; i++)
+    {
+        in >> c;
+        x.adaugare_sfarsit(c);
+    }
+    x.nr_elem=dim;
+    if(x.nr_elem>x.dim_max)
+        cout<<"Nu se mai pot insera caractere";
+    return in;
+}
+ostream & operator<<(ostream& out,DEQUE & y)
+{
+    nod* aux=y.prim;
+    while(aux!=NULL)
+    {
+        out<<aux->get_info();
+        aux=aux->get_next();
+    }
+    return out;
+}
+void DEQUE::operator=(const DEQUE& x)
+{
+    nod* a;
+    nod* b;
+    nod* n;
+    nr_elem=x.nr_elem;
+    dim_max=x.dim_max;
+    a=NULL;
+    b=x.prim;
+    while(b!=NULL)
+    {
+        n=new nod(b->get_info());
+        a->set_next(n);
+        b=b->get_next();
+    }
+}
+void DEQUE::adaugare_inceput(char c)
+{
+    if(nr_elem>=dim_max)
+    {
+        cout<<"\nCoada plina ";
+        return;
+    }
+    nod* n=new nod(c);
+    n->set_next(prim);
+    prim=n;
+    nr_elem++;
+}
+
+void DEQUE::stergere_sfarsit()
+{
+    if(prim==NULL)
+        return;
+    nod* aux=prim;
+    while(aux->get_next()!=ultim)
+    {
+        aux=aux->get_next();
+    }
+    aux->set_next(NULL);
+    ultim=aux;
+    aux=aux->get_next();
+    delete aux;
+    nr_elem--;
+}
+class DEQUE_MARCAJ: public Coada //Clasa derivata din clasa Coada
+{
+
+    bool ok;
+public:
+    DEQUE_MARCAJ():Coada()
+    {
+        ok=true;
+    }//constructor de initializare
+    DEQUE_MARCAJ(char *x):Coada(x)
+    {
+        ok=true;
+    }//constructor de initializare cu parametru
+    ~DEQUE_MARCAJ()
+    {
+        if(ok==true)
+            delete this;
+    }//destructorul
+    DEQUE_MARCAJ(const DEQUE_MARCAJ &x):Coada(x)
+    {
+        ok=false;
+    }//constructorul de copiere
+    friend istream& operator>>(istream& in, DEQUE_MARCAJ& x);
+    friend ostream& operator<<(ostream& out, DEQUE_MARCAJ& y);
+    void operator=(const DEQUE_MARCAJ& x);
+    void adaugare_inceput(char c);
+    void stergere_inceput();
+    void stergere_sfarsit();
+
+};
+istream& operator>>(istream& in, DEQUE_MARCAJ& x)
+{
+    char c;
+    cout<<"dim_max: ";
+    in >> x.dim_max;
+    cout<<"nr_elem: ";
+    in >> x.nr_elem;
+    for(int i=0; i<x.nr_elem && i<x.dim_max; i++)
+    {
+        in >> c;
+        x.adaugare_sfarsit(c);
+    }
+    if(x.nr_elem>x.dim_max)
+        cout<<"Coada plina";
+    return in;
+}
+ostream & operator<<(ostream& out, DEQUE_MARCAJ& y)
+{
+    nod* n=y.prim;
+    while(n!=NULL)
+    {
+        out<<n->get_info();
+        n=n->get_next();
+    }
+    return out;
+}
+void DEQUE_MARCAJ::operator=(const DEQUE_MARCAJ& x)
+{
+    nod* a;
+    nod* b;
+    nod* n;
+    nr_elem=x.nr_elem;
+    dim_max=x.dim_max;
+    a=NULL;
+    b=x.prim;
+    while(b!=NULL)
+    {
+        n=new nod(b->get_info());
+        a->set_next(n);
+        b=b->get_next();
+    }
+}
+void DEQUE_MARCAJ::adaugare_inceput(char c)
+{
+    if(nr_elem>=dim_max)
+    {
+        cout<<"\nCoada plina ";
+        return;
+    }
+    nod* n=new nod(c);
+    if(prim==NULL)
+    {
+        prim=n;
+    }
+    else
+    {
+        nod* aux;
+        aux=prim->get_next();
+        n->set_next(aux);
+        prim->set_next(n);
+    }
+    nr_elem++;
+}
+void DEQUE_MARCAJ::stergere_inceput()
+{
+    if(prim==NULL)
+        return;
+    if(prim->get_next()==NULL)
+    {
+        delete prim;
+        prim=NULL;
+    }
+    else
+    {
+        nod* a;
+        nod* b;
+        a=prim->get_next();
+        b=a->get_next();
+        prim->set_next(b);
+        delete a;
+    }
+    nr_elem--;
+}
+void DEQUE_MARCAJ::stergere_sfarsit()
+{
+    if(prim==NULL)
+        return;
+    nod* n=prim;
+    while(n->get_next()!=ultim)
+    {
+        n=n->get_next();
+    }
+    nod* aux;
+    aux=n;
+    aux->set_next(NULL);
+    ultim=aux;
+    aux=aux->get_next();
+    delete aux;
+    nr_elem--;
+}
+int main()
+{   char c;
+    nod A;
+    Coada C;
+    cin>>A;
+    cout<<A;
+
+
+
+    return 0;
+}
